@@ -1,4 +1,5 @@
 ESP32_SD_SSD1331_Gadgets	KEYWORD1
+Gadgets_Init	KEYWORD2
 Gadgets_MyFont_Init	KEYWORD2
 ShinonomeClock_YMD	KEYWORD2
 MyFontClock_Weekday	KEYWORD2
@@ -8,6 +9,7 @@ Shinonome8x16ClockScroll	KEYWORD2
 MyFont16x16ClockScroll	KEYWORD2
 YahooJ_Weather_TodayTomorrow	KEYWORD2
 MyFont_SD_Read	KEYWORD2
+Scroll_1_line	KEYWORD2
 _ssd1331	KEYWORD3
 _SFR	KEYWORD3
 _EWG	KEYWORD3

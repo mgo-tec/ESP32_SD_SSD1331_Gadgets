@@ -1,6 +1,6 @@
 /*
   ESP32_SD_SSD1331_Gadgets.cpp
-  Beta version 1.0
+  Beta version 1.1
 
 Copyright (c) 2017 Mgo-tec
 
@@ -52,7 +52,7 @@ static uint8_t _colon_fnt[2][16] = {
 
 ESP32_SD_SSD1331_Gadgets::ESP32_SD_SSD1331_Gadgets(){}
 
-//*********** 半角　東雲フォント　年月日表示 **********************
+//*********** 初期化　自作フォントファイルオープン **********************
 void ESP32_SD_SSD1331_Gadgets::Gadgets_MyFont_Init(const char* my_fontfile){
   SD.begin(5, SPI, 24000000, "/sd");
   _MyF = SD.open(my_fontfile, FILE_READ);
@@ -221,6 +221,7 @@ void ESP32_SD_SSD1331_Gadgets::YahooJ_Weather_TodayTomorrow(uint8_t y0, String s
   String w_str2 = dummy1.substring(0, dummy1.indexOf('|', 2));
   Serial.print("Weather Today = "); Serial.println(w_str1);
   Serial.print("Weather Tomorrow = "); Serial.println(w_str2);
+  Serial.flush();
 
   _EWG.WeatherJ_font_num(w_str1, 0, hour(), today_fnum, today_col);
   _EWG.WeatherJ_font_num(w_str2, 1, hour(), tomorrow_fnum, tomorrow_col);
@@ -241,4 +242,48 @@ void ESP32_SD_SSD1331_Gadgets::MyFont_SD_Read(File F, uint8_t ZorH, uint8_t num,
   F.seek(num * (16 * ZorH));
   F.read(buf[0], 16);
   F.read(buf[1], 16);
+}
+//***************************
+void ESP32_SD_SSD1331_Gadgets::Scroll_1_line(uint8_t y, uint8_t num, uint8_t red, uint8_t green, uint8_t blue, uint16_t interval, uint8_t sjis_code[], uint16_t length, bool *WebGet){
+  if((xTaskGetTickCount() - _xLastTime[num]) > interval){
+    if(*WebGet){
+      _SJ_cnt[num] = 0;
+      _scl_cnt[num] = 0;
+      _Zen_or_Han_cnt[num] = 0;
+      _fnt_read_ok[num] = true;
+      
+      for(int i=0; i<16; i++){
+        _Font_buf[num][0][i] = 0;
+        _Font_buf[num][1][i] = 0;
+      }
+      
+      *WebGet = false;
+    }
+    if(_fnt_read_ok[num] == true){
+      _zen_or_han[num] = _SFR.Sjis_inc_FntRead(sjis_code, length, &_SJ_cnt[num], _Font_buf[num]);
+    }
+    _fnt_read_ok[num] = _ssd1331.Scroller_8x16_RtoL4line(y, num, _zen_or_han[num], &_scl_cnt[num], &_Zen_or_Han_cnt[num], _Font_buf[num], red, green, blue);
+    _xLastTime[num] = xTaskGetTickCount();
+  }
+}
+//******************** root CA SD card Get **********************
+void ESP32_SD_SSD1331_Gadgets::Root_CA_SDcard_Read(const char *filename, char Root_CA[]){
+    //SD.begin(CS_SD, SPI, 24000000, "/sd");
+
+    File file = SD.open(filename, FILE_READ);
+    if (!file) {
+      Serial.print(filename);
+      Serial.print(" File not found");
+      return;
+    }else{
+      Serial.print(filename);
+      Serial.println(" File read OK!");
+    }
+    uint16_t i = 0;
+    while(file.available()){
+      Root_CA[i] = file.read();
+      i++;
+    }
+    Root_CA[i] = '\0';
+    file.close();
 }
